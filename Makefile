@@ -65,6 +65,7 @@ install: libdragon.a libdragonsys.a libdragonpp.a
 	install -m 0644 include/exception.h $(INSTALLDIR)/mips64-elf/include/exception.h
 	install -m 0644 include/system.h $(INSTALLDIR)/mips64-elf/include/system.h
 	install -m 0644 include/dir.h $(INSTALLDIR)/mips64-elf/include/dir.h
+	install -m 0664 include/halt.h $(INSTALLDIR)/mips64-elf/include/halt.h
 	install -m 0644 include/libdragon.h $(INSTALLDIR)/mips64-elf/include/libdragon.h
 
 clean:

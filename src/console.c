@@ -25,7 +25,7 @@
  * is needed, code should be sure that the console is not initialized.
  *
  * Code wishing to use the console should first initialize the console support in
- * libdragon with #console_init.  Once the console has been initialized, it wil
+ * libdragon with #console_init.  Once the console has been initialized, it will
  * operate in one of two modes.  In automatic mode, every write to the console will
  * be immediately displayed on the screen.  The console will be scrolled when the
  * buffer fills.  In manual mode, the console will only be displayed after calling
@@ -264,6 +264,11 @@ static void __console_render()
             {
                 display_show(dc);
                 return;
+            }
+
+            if(t_buf == ' ')
+            {
+                continue;
             }
 
             /* Draw to the screen using the forecolor and backcolor set in the graphics
