@@ -971,6 +971,9 @@ int readlink( const char *path, char *buf, size_t bufsize )
     return -1;
 }
 
+// Do not allow this in small data or it will seem larger than it actually is
+extern char end __attribute__((section (".data"))); /* Set by linker.  */
+
 /**
  * @brief Return a new chunk of memory to be used as heap
  *
@@ -981,7 +984,6 @@ int readlink( const char *path, char *buf, size_t bufsize )
  */
 void *sbrk( int incr )
 {
-    extern char   end; /* Set by linker.  */
     static char * heap_end = 0;
     static char * heap_top = 0;
     char *        prev_heap_end;
