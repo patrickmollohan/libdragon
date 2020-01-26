@@ -77,8 +77,8 @@ static struct controller_data last;
  */
 void controller_init()
 {
-    memset(&current, 0, sizeof(current));
-    memset(&last, 0, sizeof(last));
+    n64_memset(&current, 0, sizeof(current));
+    n64_memset(&last, 0, sizeof(last));
 }
 
 /**
@@ -103,7 +103,7 @@ static void __controller_exec_PIF( void *inblock, void *outblock )
     volatile uint64_t outblock_temp[8];
 
     data_cache_hit_writeback_invalidate(inblock_temp, 64);
-    memcpy(UncachedAddr(inblock_temp), inblock, 64);
+    __n64_memcpy_ASM(UncachedAddr(inblock_temp), inblock, 64);
 
     /* Be sure another thread doesn't get into a resource fight */
     disable_interrupts();
@@ -129,7 +129,7 @@ static void __controller_exec_PIF( void *inblock, void *outblock )
     /* Now that we've copied, its safe to let other threads go */
     enable_interrupts();
 
-    memcpy(outblock, UncachedAddr(outblock_temp), 64);
+    __n64_memcpy_ASM(outblock, UncachedAddr(outblock_temp), 64);
 }
 
 /**
@@ -158,16 +158,17 @@ int eeprom_present()
 
     /* We are looking for 0x80 in the second byte returned, which
      * signifies that there is an EEPROM present.*/
-    if( ((output[1] >> 48) & 0xFF) == 0x80 )
-    {
+    //if( ((output[1] >> 48) & 0xFF) == 0x80 )
+    //{
         /* EEPROM found! */
-        return 1;
-    }
-    else
-    {
+    //    return 1;
+    //}
+    //else
+    //{
         /* EEPROM not found! */
-        return 0;
-    }
+    //    return 0;
+    //}
+    return ((output[1] >> 48) & 0xFF) == 0x80 ;
 }
 
 /**
@@ -195,7 +196,7 @@ void eeprom_read(int block, uint8_t * const buf)
 
 	SI_eeprom_read_block[0] = 0x0000000002080400 | (block & 255);
     __controller_exec_PIF(SI_eeprom_read_block,output);
-    memcpy( buf, &output[1], 8 );
+    __n64_memcpy_ASM( buf, &output[1], 8 );
 }
 
 /**
@@ -222,7 +223,7 @@ void eeprom_write(int block, const uint8_t * const data)
     static unsigned long long output[8];
 
 	SI_eeprom_write_block[0] = 0x000000000a010500 | (block & 255);
-    memcpy( &SI_eeprom_write_block[1], data, 8 );
+    __n64_memcpy_ASM( &SI_eeprom_write_block[1], data, 8 );
     __controller_exec_PIF(SI_eeprom_write_block,output);
 }
 
@@ -263,10 +264,10 @@ void controller_read(struct controller_data * output)
 void controller_scan()
 {
     /* Remember last */
-    memcpy(&last, &current, sizeof(current));
+    __n64_memcpy_ASM(&last, &current, sizeof(current));
 
     /* Grab current */
-    memset(&current, 0, sizeof(current));
+    n64_memset(&current, 0, sizeof(current));
     controller_read(&current);
 }
 
@@ -284,7 +285,7 @@ struct controller_data get_keys_down()
     struct controller_data ret;
 
     /* Start with baseline */
-    memcpy(&ret, &current, sizeof(current));
+    __n64_memcpy_ASM(&ret, &current, sizeof(current));
 
     /* Figure out which wasn't pressed last time and is now */
     for(int i = 0; i < 4; i++)
@@ -309,7 +310,7 @@ struct controller_data get_keys_up()
     struct controller_data ret;
 
     /* Start with baseline */
-    memcpy(&ret, &current, sizeof(current));
+    __n64_memcpy_ASM(&ret, &current, sizeof(current));
 
     /* Figure out which was pressed last time and isn't now */
     for(int i = 0; i < 4; i++)
@@ -334,7 +335,7 @@ struct controller_data get_keys_held()
     struct controller_data ret;
 
     /* Start with baseline */
-    memcpy(&ret, &current, sizeof(current));
+    __n64_memcpy_ASM(&ret, &current, sizeof(current));
 
     /* Figure out which was pressed last time and now as well */
     for(int i = 0; i < 4; i++)
@@ -445,14 +446,14 @@ void execute_raw_command( int controller, int command, int bytesout, int bytesin
     data[controller + 1] = bytesin;
     data[controller + 2] = command;
 
-    memcpy( &data[controller + 3], out, bytesout );
-    memset( &data[controller + 3 + bytesout], 0xFF, bytesin );
+    __n64_memcpy_ASM( &data[controller + 3], out, bytesout );
+    n64_memset( &data[controller + 3 + bytesout], 0xFF, bytesin );
     data[controller + 3 + bytesout + bytesin] = 0xFE;
 
     __controller_exec_PIF(SI_read_controllers_block,SI_debug);
 
     data = (uint8_t *)SI_debug;
-    memcpy( in, &data[controller + 3 + bytesout], bytesin );
+    __n64_memcpy_ASM( in, &data[controller + 3 + bytesout], bytesin );
 }
 
 /**
@@ -671,7 +672,7 @@ int read_mempak_address( int controller, uint16_t address, uint8_t *data )
     if( controller < 0 || controller > 3 ) { return -1; }
 
     /* Last byte must be 0x01 to signal to the SI to process data */
-    memset( SI_read_mempak_block, 0, 64 );
+    n64_memset( SI_read_mempak_block, 0, 64 );
     SI_read_mempak_block[56] = 0xfe;
     SI_read_mempak_block[63] = 0x01;
 
@@ -686,12 +687,12 @@ int read_mempak_address( int controller, uint16_t address, uint8_t *data )
     SI_read_mempak_block[controller + 4] = read_address & 0xFF;
 
     /* Leave room for 33 bytes (32 bytes + CRC) to come back */
-    memset( &SI_read_mempak_block[controller + 5], 0xFF, 33 );
+    n64_memset( &SI_read_mempak_block[controller + 5], 0xFF, 33 );
 
     __controller_exec_PIF(SI_read_mempak_block,&output);
 
     /* Copy data correctly out of command */
-    memcpy( data, &output[controller + 5], 32 );
+    __n64_memcpy_ASM( data, &output[controller + 5], 32 );
 
     /* Validate CRC */
     uint8_t crc = __calc_data_crc( &output[controller + 5] );
@@ -745,7 +746,7 @@ int write_mempak_address( int controller, uint16_t address, uint8_t *data )
     if( controller < 0 || controller > 3 ) { return -1; }
 
     /* Last byte must be 0x01 to signal to the SI to process data */
-    memset( SI_write_mempak_block, 0, 64 );
+    n64_memset( SI_write_mempak_block, 0, 64 );
     SI_write_mempak_block[56] = 0xfe;
     SI_write_mempak_block[63] = 0x01;
 
@@ -760,7 +761,7 @@ int write_mempak_address( int controller, uint16_t address, uint8_t *data )
     SI_write_mempak_block[controller + 4] = write_address & 0xFF;
 
     /* Place the data to be written */
-    memcpy( &SI_write_mempak_block[controller + 5], data, 32 );
+    __n64_memcpy_ASM( &SI_write_mempak_block[controller + 5], data, 32 );
 
     /* Leave room for CRC to come back */
     SI_write_mempak_block[controller + 5 + 32] = 0xFF;
@@ -820,11 +821,11 @@ int identify_accessory( int controller )
             case 0x0001: /* Mempak/rumblepak/transferpak */
             {
                 /* Init string one */
-                memset( data, 0xfe, 32 );
+                n64_memset( data, 0xfe, 32 );
                 write_mempak_address( controller, 0x8000, data );
 
                 /* Init string two */
-                memset( data, 0x80, 32 );
+                n64_memset( data, 0x80, 32 );
                 write_mempak_address( controller, 0x8000, data );
 
                 /* Get register contents */
@@ -866,7 +867,7 @@ void rumble_start( int controller )
     uint8_t data[32];
 
     /* Unsure of why we have to do this multiple times */
-    memset( data, 0x01, 32 );
+    n64_memset( data, 0x01, 32 );
     write_mempak_address( controller, 0xC000, data );
     write_mempak_address( controller, 0xC000, data );
     write_mempak_address( controller, 0xC000, data );
@@ -883,7 +884,7 @@ void rumble_stop( int controller )
     uint8_t data[32];
 
     /* Unsure of why we have to do this multiple times */
-    memset( data, 0x00, 32 );
+    n64_memset( data, 0x00, 32 );
     write_mempak_address( controller, 0xC000, data );
     write_mempak_address( controller, 0xC000, data );
     write_mempak_address( controller, 0xC000, data );

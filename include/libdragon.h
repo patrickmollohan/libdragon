@@ -59,4 +59,34 @@
 #include "exception.h"
 #include "dir.h"
 
+#define n64_free(b) \
+free(b)
+
+#define n64_malloc(s) \
+malloc((s))
+
+#define n64_memcpy(d,s,t) \
+memcpy((d),(s),(t))
+
+#define n64_memmove_naive_no_malloc(d,s,n) \
+memmove((d),(s),(n))
+
+#define n64_memmove_naive(d,s,n) \
+memmove((d),(s),(n))
+
+#define n64_memmove(d,s,n) \
+memmove((d),(s),(n))
+
+#define n64_memmove_old_with_potential_bug(d,s,n) \
+memmove((d),(s),(n))
+
+#define n64_memset(p,v,n) \
+memset((p),(v),(n))
+
+#define n64_memset2(p,v,n) \
+memset((p),(v),(n))
+
+#define n64_realloc(p,n) \
+realloc((p),(n))
+
 #endif

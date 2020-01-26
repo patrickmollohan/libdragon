@@ -271,7 +271,7 @@ void display_init( resolution_t res, bitdepth_t bit, uint32_t num_buffers, gamma
     }
 
     /* Copy over to temporary for extra initializations */
-    memcpy( registers, reg_values[tv_type], sizeof( uint32_t ) * REGISTER_COUNT );
+    __n64_memcpy_ASM( registers, reg_values[tv_type], sizeof( uint32_t ) * REGISTER_COUNT );
 
     /* Figure out control register based on input given */
     switch( bit )
@@ -352,11 +352,11 @@ void display_init( resolution_t res, bitdepth_t bit, uint32_t num_buffers, gamma
     {
         /* Set parameters necessary for drawing */
         /* Grab a location to render to */
-        buffer[i] = malloc( __width * __height * __bitdepth + 15 );
+        buffer[i] = n64_malloc( __width * __height * __bitdepth + 15 );
         __safe_buffer[i] = ALIGN_16BYTE( UNCACHED_ADDR( buffer[i] ) );
 
         /* Baseline is blank */
-        memset( __safe_buffer[i], 0, __width * __height * __bitdepth );
+        n64_memset( __safe_buffer[i], 0, __width * __height * __bitdepth );
     }
 
     /* Set the first buffer as the displaying buffer */
@@ -400,7 +400,7 @@ void display_close()
         /* Free framebuffer memory */
         if( buffer[i] )
         {
-            free( buffer[i]);
+            n64_free( buffer[i]);
         }
 
         buffer[i] = 0;

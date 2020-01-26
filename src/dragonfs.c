@@ -532,7 +532,7 @@ static int recurse_path(const char * const path, int mode, directory_entry_t **d
     int ignore = 1; // Do not, by default, read again during the first while
 
     /* Save directory stack */
-    memcpy(dir_stack, directories, sizeof(uint32_t) * MAX_DIRECTORY_DEPTH);
+    n64_memcpy(dir_stack, directories, sizeof(uint32_t) * MAX_DIRECTORY_DEPTH);
 
     /* Grab first token, make sure it isn't root */
     cur_path = get_next_token(cur_path, token);
@@ -643,7 +643,7 @@ static int recurse_path(const char * const path, int mode, directory_entry_t **d
     {
         /* Restore stack */
         directory_top = dir_loc;
-        memcpy(directories, dir_stack, sizeof(uint32_t) * MAX_DIRECTORY_DEPTH);
+        n64_memcpy(directories, dir_stack, sizeof(uint32_t) * MAX_DIRECTORY_DEPTH);
     }
 
     return ret;
@@ -669,7 +669,7 @@ static int __dfs_init(uint32_t base_fs_loc)
         base_ptr = base_fs_loc;
         clear_directory();
 
-        memset(open_files, 0, sizeof(open_files));
+        n64_memset(open_files, 0, sizeof(open_files));
 
         /* Good FS */
         return DFS_ESUCCESS;
@@ -846,7 +846,7 @@ int dfs_close(uint32_t handle)
     }
 
     /* Closing the handle is easy as zeroing out the file */
-    memset(file, 0, sizeof(open_file_t));
+    n64_memset(file, 0, sizeof(open_file_t));
 
     return DFS_ESUCCESS;
 }
@@ -1024,7 +1024,7 @@ int dfs_read(void * const buf, int size, int count, uint32_t handle)
         }
 
         /* Copy in */
-        memcpy(data, file->cur_sector.data + offset_into_sector(file->loc), read_this_loop);
+        n64_memcpy(data, file->cur_sector.data + offset_into_sector(file->loc), read_this_loop);
         data += read_this_loop;
         did_read += read_this_loop;
         file->loc += read_this_loop;

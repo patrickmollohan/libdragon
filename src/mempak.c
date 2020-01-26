@@ -159,16 +159,16 @@ static int __validate_header( uint8_t *sector )
     /* Check 4 checksums of copied header data */
     current_block = 0x20;
     checksum = __get_header_checksum((uint16_t *)&sector[current_block]);
-    if( (checksum != (uint16_t)(sector[current_block + 0x1C])) && (checksum != 0xFFF2 - (uint16_t)(sector[current_block + 0x1E])) ) { return -1; }
+    if( (checksum != *(uint16_t *)(&sector[current_block + 0x1C])) || (checksum != 0xFFF2 - *(uint16_t *)(&sector[current_block + 0x1E])) ) { return -1; }
     current_block = 0x60;
     checksum = __get_header_checksum((uint16_t *)&sector[current_block]);
-    if( (checksum != (uint16_t)(sector[current_block + 0x1C])) && (checksum != 0xFFF2 - (uint16_t)(sector[current_block + 0x1E])) ) { return -1; }
+    if( (checksum != *(uint16_t *)(&sector[current_block + 0x1C])) || (checksum != 0xFFF2 - *(uint16_t *)(&sector[current_block + 0x1E])) ) { return -1; }
     current_block = 0x80;
     checksum = __get_header_checksum((uint16_t *)&sector[current_block]);
-    if( (checksum != (uint16_t)(sector[current_block + 0x1C])) && (checksum != 0xFFF2 - (uint16_t)(sector[current_block + 0x1E])) ) { return -1; }
+    if( (checksum != *(uint16_t *)(&sector[current_block + 0x1C])) || (checksum != 0xFFF2 - *(uint16_t *)(&sector[current_block + 0x1E])) ) { return -1; }
     current_block = 0xC0;
     checksum = __get_header_checksum((uint16_t *)&sector[current_block]);
-    if( (checksum != (uint16_t)(sector[current_block + 0x1C])) && (checksum != 0xFFF2 - (uint16_t)(sector[current_block + 0x1E])) ) { return -1; }
+    if( (checksum != *(uint16_t *)(&sector[current_block + 0x1C])) || (checksum != 0xFFF2 - *(uint16_t *)(&sector[current_block + 0x1E])) ) { return -1; }
 
     return 0;
 }
@@ -215,7 +215,7 @@ static int __validate_toc( uint8_t *sector )
         return -1;
     }
 
-    return -1;
+    //return -1;
 }
 
 /**
@@ -415,7 +415,7 @@ static int __read_note( uint8_t *tnote, entry_structure_t *note )
     note->entry_id = 255;
 
     /* Translate n64 to ascii */
-    memset( note->name, 0, sizeof( note->name ) );
+    n64_memset( note->name, 0, sizeof( note->name ) );
 
     for( int i = 0; i < 16; i++ )
     {
@@ -471,7 +471,7 @@ static int __write_note( entry_structure_t *note, uint8_t *out_note )
     if( !out_note || !note ) { return -1; }
 
     /* Start with baseline */
-    memset( out_note, 0, 32 );
+    n64_memset( out_note, 0, 32 );
 
     /* Easy stuff */
     out_note[0] = (note->vendor >> 16) & 0xFF;
@@ -491,7 +491,7 @@ static int __write_note( entry_structure_t *note, uint8_t *out_note )
     out_note[9] = 0x03;
 
     /* Translate ascii to n64 */
-    memcpy( tname, note->name, sizeof( note->name ) );
+    __n64_memcpy_ASM( tname, note->name, sizeof( note->name ) );
     for( int i = 18; i >= 0; i-- )
     {
         if( tname[i] == '.' )
@@ -896,7 +896,7 @@ int format_mempak( int controller )
     }
 
     /* Write out entry sectors, which can safely be zero */
-    memset( sector, 0x0, MEMPAK_BLOCK_SIZE );
+    n64_memset( sector, 0x0, MEMPAK_BLOCK_SIZE );
     if( write_mempak_sector( controller, 3, sector ) ||
         write_mempak_sector( controller, 4, sector ) )
     {
@@ -1196,7 +1196,7 @@ int delete_mempak_entry( int controller, entry_structure_t *entry )
     }
 
     /* The entry matches, so blank it */
-    memset( data, 0, 32 );
+    n64_memset( data, 0, 32 );
     if( write_mempak_address( controller, (3 * MEMPAK_BLOCK_SIZE) + (entry->entry_id * 32), data ) )
     {
         /* Couldn't update note database */

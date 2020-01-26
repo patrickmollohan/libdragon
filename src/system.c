@@ -16,6 +16,11 @@
 
 #undef errno
 
+#define n64_free(b) \
+n64_free2((b), __FILE__, __LINE__)
+#define n64_malloc(s) \
+n64_malloc2((s), __FILE__, __LINE__)
+
 /** 
  * @defgroup system newlib Interface Hooks
  * @brief System hooks to provide low level threading and filesystem functionality to newlib.
@@ -215,8 +220,8 @@ static char *__strdup( const char * const in )
 {
     if( !in ) { return 0; }
 
-    char *ret = malloc( __strlen( in ) + 1 );
-    __memcpy( ret, in, __strlen( in ) + 1 );
+    char *ret = n64_malloc( __strlen( in ) + 1 );
+    __n64_memcpy_ASM( ret, in, __strlen( in ) + 1 );
 
     return ret;
 }
@@ -416,7 +421,7 @@ int detach_filesystem( const char * const prefix )
                 }
 
                 /* Now free the memory associated with the prefix and zero out the filesystem */
-                free( filesystems[i].prefix );
+                n64_free( filesystems[i].prefix );
                 filesystems[i].prefix = 0;
                 filesystems[i].fs = 0;
 
@@ -626,7 +631,7 @@ int execve( char *name, char **argv, char **env )
  * @param[in] rc
  *            Return value of the exiting program
  */
-void exit( int rc )
+void _exit( int rc )
 {
     /* Default stub just causes a divide by 0 exception.  */
     int x = rc / INT_MAX;

@@ -84,7 +84,7 @@
  *
  * @return The size of the buffer in bytes rounded to an 8 byte boundary
  */
-#define CALC_BUFFER(x)  ( ( ( ( x ) / 25 ) >> 3 ) << 3 )
+#define CALC_BUFFER(x)  ( ( ( ( x ) / 35 ) >> 3 ) << 3 )
 
 /** @brief The actual frequency the AI will run at */
 static int _frequency = 0;
@@ -240,13 +240,13 @@ void audio_init(const int frequency, int numbuffers)
     /* Set up buffers */
     _buf_size = CALC_BUFFER(_frequency);
     _num_buf = (numbuffers > 1) ? numbuffers : NUM_BUFFERS;
-    buffers = malloc(_num_buf * sizeof(short *));
+    buffers = n64_malloc(_num_buf * sizeof(short *));
 
     for(int i = 0; i < _num_buf; i++)
     {
         /* Stereo buffers, interleaved */
-        buffers[i] = malloc(sizeof(short) * 2 * _buf_size);
-        memset(buffers[i], 0, sizeof(short) * 2 * _buf_size);
+        buffers[i] = n64_malloc(sizeof(short) * 2 * _buf_size);
+        n64_memset(buffers[i], 0, sizeof(short) * 2 * _buf_size);
     }
 
     /* Set up ring buffer pointers */
@@ -284,13 +284,13 @@ void audio_close()
             /* Nuke anything that isn't freed */
             if(buffers[i])
             {
-                free(buffers[i]);
+                n64_free(buffers[i]);
                 buffers[i] = 0;
             }
         }
 
         /* Nuke master array */
-        free(buffers);
+        n64_free(buffers);
         buffers = 0;
     }
 
@@ -300,7 +300,7 @@ void audio_close()
 
 static void audio_paused_callback(short *buffer, size_t numsamples)
 {
-    memset(UncachedShortAddr(buffer), 0, numsamples * sizeof(short) * 2);
+    n64_memset(UncachedShortAddr(buffer), 0, numsamples * sizeof(short) * 2);
 }
 
 /**
@@ -363,7 +363,7 @@ void audio_write(const short * const buffer)
     /* Copy buffer into local buffers */
     buf_full |= (1<<next);
     now_writing = next;
-    memcpy(UncachedShortAddr(buffers[now_writing]), buffer, _buf_size * 2 * sizeof(short));
+    __n64_memcpy_ASM(UncachedShortAddr(buffers[now_writing]), buffer, _buf_size * 2 * sizeof(short));
     audio_callback();
     enable_interrupts();
 }
@@ -400,7 +400,7 @@ void audio_write_silence()
     /* Copy silence into local buffers */
     buf_full |= (1<<next);
     now_writing = next;
-    memset(UncachedShortAddr(buffers[now_writing]), 0, _buf_size * 2 * sizeof(short));
+    n64_memset(UncachedShortAddr(buffers[now_writing]), 0, _buf_size * 2 * sizeof(short));
     audio_callback();
     enable_interrupts();
 }

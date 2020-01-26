@@ -75,7 +75,7 @@ void console_set_render_mode(int mode)
  * @brief Macro to move the console up one line
  */
 #define move_buffer() \
-    memmove(render_buffer, render_buffer + (sizeof(char) * CONSOLE_WIDTH), CONSOLE_SIZE - (CONSOLE_WIDTH * sizeof(char))); \
+    n64_memmove(render_buffer, render_buffer + (sizeof(char) * CONSOLE_WIDTH), CONSOLE_SIZE - (CONSOLE_WIDTH * sizeof(char))); \
     pos -= CONSOLE_WIDTH;
 
 /**
@@ -182,7 +182,7 @@ void console_init()
     display_close();
     display_init( RESOLUTION_320x240, DEPTH_16_BPP, 2, GAMMA_NONE, ANTIALIAS_RESAMPLE );
 
-    render_buffer = malloc(CONSOLE_SIZE);
+    render_buffer = n64_malloc(CONSOLE_SIZE);
 
     console_clear();
     console_set_render_mode(RENDER_AUTOMATIC);
@@ -202,7 +202,7 @@ void console_close()
     if(render_buffer)
     {
         /* Nuke the console buffer */
-        free(render_buffer);
+        n64_free(render_buffer);
         render_buffer = 0;
     }
 
@@ -230,7 +230,7 @@ void console_clear()
     render_now = render;
 
     /* Remove all data */
-    memset(render_buffer, 0, CONSOLE_SIZE);
+    n64_memset(render_buffer, 0, CONSOLE_SIZE);
     
     /* Should we display? */
     if(render_now == RENDER_AUTOMATIC)

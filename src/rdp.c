@@ -941,7 +941,7 @@ sprite_t *load_sprite( const char * const spritename )
     if( fp > 0 )
     {
         int size = dfs_size( fp );
-        sprite_t *sp = malloc( size );
+        sprite_t *sp = n64_malloc( size );
         dfs_read( sp, 1, size, fp );
         dfs_close( fp );
 
@@ -1162,7 +1162,7 @@ void rdp_buffer_copy( display_context_t disp, uint16_t *buffer_texture, uint16_t
     // generate texture
     for(int j = y_buf; j < y_buf + height; j++) // Y
     {
-        memcpy( &buffer_texture[tex_pos], &buffer16[screen], width << 1 );
+        __n64_memcpy_ASM( &buffer_texture[tex_pos], &buffer16[screen], width << 1 );
         screen += __width;
         tex_pos += width;
     }	

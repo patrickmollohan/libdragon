@@ -186,7 +186,7 @@ static void __register_callback( struct callback_link ** head, void (*callback)(
     {
         /* Add to beginning of linked list */
         struct callback_link *next = *head;
-        (*head) = malloc(sizeof(struct callback_link));
+        (*head) = n64_malloc(sizeof(struct callback_link));
 
         if( *head )
         {
@@ -229,7 +229,7 @@ static void __unregister_callback( struct callback_link ** head, void (*callback
                 }
 
                 /* Free memory */
-                free( cur );
+                n64_free( cur );
 
                 /* Exit early */
                 break;
